@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card results-card">
+    <h1>Parsed Resume</h1>
+    <p class="file-info">File: {{ filename }}</p>
+    
+    <div class="result-section">
+        <h2>Skills</h2>
+        <div class="skills-container">
+            {% if skills %}
+                {% for skill in skills %}
+                    <span class="skill-tag">{{ skill }}</span>
+                {% endfor %}
+            {% else %}
+                <p>No skills detected.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="result-section">
+        <h2>Education</h2>
+        <ul class="result-list">
+            {% if education %}
+                {% for edu in education %}
+                    <li class="education-item">
+                        {% if edu.institution %}
+                            <strong>{{ edu.institution }}</strong><br>
+                        {% endif %}
+                        {% if edu.degree %}
+                            <span>{{ edu.degree }}</span><br>
+                        {% endif %}
+                        {% if edu.graduation_year %}
+                            <span class="edu-date">Graduation Year: {{ edu.graduation_year }}</span><br>
+                        {% endif %}
+                        {% if edu.gpa %}
+                            <span>GPA: {{ edu.gpa }}</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li>No education information detected.</li>
+            {% endif %}
+        </ul>
+    </div>
+    
+    <div class="result-section">
+        <h2>Experience</h2>
+        <ul class="result-list">
+            {% if experience %}
+                {% for exp in experience %}
+                    <li class="experience-item">
+                        {% if exp.company %}
+                            <strong>{{ exp.company }}</strong><br>
+                        {% endif %}
+                        {% if exp.position %}
+                            <div class="job-title">{{ exp.position }}</div>
+                        {% endif %}
+                        {% if exp.date %}
+                            <div class="exp-date">{{ exp.date }}</div>
+                        {% endif %}
+                        {% if exp.description %}
+                            <div class="exp-description">
+                                {{ exp.description }}
+                            </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li>No experience information detected.</li>
+            {% endif %}
+        </ul>
+    </div>
+    
+    <div class="actions">
+        <a href="/" class="btn-gradient">Upload Another Resume</a>
+        <a href="/filter" class="btn-outline">Filter Resumes</a>
+        <button id="download-json" class="btn-outline" onclick="downloadJSON()">Download JSON</button>
+    </div>
+</div>
+
+<script>
+function downloadJSON() {
+    // Create JSON data
+    const data = {
+        "filename": "{{ filename }}",
+        "skills": JSON.parse('{{ skills|tojson|safe }}'),
+        "education": JSON.parse('{{ education|tojson|safe }}'),
+        "experience": JSON.parse('{{ experience|tojson|safe }}')
+    };
+    
+    // Convert to JSON string
+    const jsonString = JSON.stringify(data, null, 2);
+    
+    // Create download link
+    const downloadLink = document.createElement('a');
+    downloadLink.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(jsonString);
+    downloadLink.download = "{{ filename }}".replace('.pdf', '').replace('.docx', '') + '_parsed.json';
+    
+    // Trigger download
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+}
+</script>
+
+<style>
+.results-card {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.file-info {
+    color: #666;
+    margin-bottom: 1.5rem;
+    font-style: italic;
+}
+
+.result-section {
+    margin-bottom: 2rem;
+}
+
+.result-section h2 {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.skill-tag {
+    background-color: #f0f7ff;
+    color: #e3e8ee;
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    border: 1px solid #cce5ff;
+}
+
+.result-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.result-list li {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border-left: 3px solid #0066cc;
+}
+
+.education-item, .experience-item {
+    position: relative;
+}
+
+.job-title {
+    font-weight: 500;
+    margin-top: 0.3rem;
+}
+
+.edu-date, .exp-date {
+    color: #666;
+    font-style: italic;
+    margin: 0.3rem 0;
+}
+
+.exp-description {
+    margin-top: 0.8rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.btn-gradient, .btn-outline {
+    padding: 0.7rem 1.2rem;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-gradient {
+    background: linear-gradient(135deg, #0066cc, #4d94ff);
+    color: white;
+    border: none;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #0066cc;
+    border: 1px solid #0066cc;
+}
+
+.btn-gradient:hover {
+    background: linear-gradient(135deg, #004c99, #3385ff);
+    transform: translateY(-2px);
+}
+
+.btn-outline:hover {
+    background-color: #f0f7ff;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .results-card {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .actions {
+        flex-direction: column;
+    }
+    
+    .btn-gradient, .btn-outline {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}

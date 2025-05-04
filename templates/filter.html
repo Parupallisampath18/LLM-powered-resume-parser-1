@@ -1,0 +1,428 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card filter-card">
+    <h1>Filter Resumes by Skills and Graduation Year</h1>
+    
+    <div class="filter-container">
+        <div class="filter-section">
+            <h2>Select Skills</h2>
+            <div class="skills-selector">
+                {% for skill in all_skills %}
+                <label class="skill-checkbox">
+                    <input type="checkbox" name="skill" value="{{ skill }}">
+                    <span>{{ skill }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            
+            <h2>B.Tech/Degree Graduation Year</h2>
+            <div class="year-filter-options">
+                <div class="year-filter-type">
+                    <div class="specific-year-container">
+                        <select id="graduation-year" class="year-select">
+                            <option value="">Any Year</option>
+                            
+                            <!-- Current Year -->
+                            <option value="{{ current_year }}">{{ current_year }} (Current)</option>
+                            
+                            <!-- Next 5 Years -->
+                            <optgroup label="Future Years">
+                                {% for year in range(current_year + 1, current_year + 6) %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            
+                            <!-- Previous 10 Years -->
+                            <optgroup label="Recent Years">
+                                {% for year in range(current_year - 1, current_year - 11, -1) %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            
+                            <!-- Earlier Decades -->
+                            <optgroup label="2010s">
+                                {% for year in range(2010, 2020) %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            
+                            <optgroup label="2000s">
+                                {% for year in range(2000, 2010) %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            
+                            <optgroup label="1990s">
+                                {% for year in range(1990, 2000) %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            
+                            <optgroup label="1980s">
+                                {% for year in range(1980, 1990) %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        </select>
+                        
+                        <!-- Quick year selection buttons -->
+                        <div class="quick-year-buttons">
+                            <button type="button" class="quick-year-btn" data-year="{{ current_year }}">Current Year</button>
+                            <button type="button" class="quick-year-btn" data-year="{{ current_year - 1 }}">Last Year</button>
+                            <button type="button" class="quick-year-btn" data-year="{{ current_year - 4 }}">5 Years Ago</button>
+                            <button type="button" class="quick-year-btn" data-year="2020">2020</button>
+                            <button type="button" class="quick-year-btn" data-year="2015">2015</button>
+                            <button type="button" class="quick-year-btn" data-year="2010">2010</button>
+                            <button type="button" class="quick-year-btn" data-year="2000">2000</button>
+                            <button type="button" class="quick-year-btn" data-year="">Any Year</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Select Minimum B.Tech/Degree GPA</h2>
+            <div class="gpa-selector">
+                <label>
+                    <input type="radio" name="gpa" value="9.0"> Greater than 9
+                </label>
+                <label>
+                    <input type="radio" name="gpa" value="8.0"> Greater than 8
+                </label>
+                <label>
+                    <input type="radio" name="gpa" value="7.0"> Greater than 7
+                </label>
+                <label>
+                    <input type="radio" name="gpa" value="6.0"> Greater than 6
+                </label>
+                <label>
+                    <input type="radio" name="gpa" value="0" checked> Any GPA
+                </label>
+            </div>
+            
+            <button id="apply-filter" class="btn-gradient">Apply Filter</button>
+        </div>
+        
+        <div class="results-section">
+            <h2>Matching Resumes</h2>
+            <div id="filtered-resumes">
+                {% if resumes %}
+                    {% for resume in resumes %}
+                    <div class="resume-item">
+                        <h3>{{ resume.name }}</h3>
+                        <div class="skills-container">
+                            {% for skill in resume.skills %}
+                            <span class="skill-tag">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                        <a href="/results?filename={{ resume.id }}" class="btn-outline">View Details</a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No resumes match your criteria.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Current year for calculations and display
+    const currentYear = new Date().getFullYear();
+    
+    // Get DOM elements
+    const specificYearSelect = document.getElementById('graduation-year');
+    const quickYearBtns = document.querySelectorAll('.quick-year-btn');
+    
+    // Quick year selection buttons
+    quickYearBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const year = this.getAttribute('data-year');
+            specificYearSelect.value = year;
+        });
+    });
+    
+    // Apply filter button click handler
+    document.getElementById('apply-filter').addEventListener('click', function() {
+        // Get all selected skills
+        const selectedSkills = [];
+        const skillCheckboxes = document.querySelectorAll('input[name="skill"]:checked');
+        
+        skillCheckboxes.forEach(checkbox => {
+            selectedSkills.push(checkbox.value);
+        });
+        
+        // Get selected year
+        const selectedYear = specificYearSelect.value;
+        
+        // Get the selected GPA filter
+        const selectedGPA = document.querySelector('input[name="gpa"]:checked');
+        const gpaValue = selectedGPA ? parseFloat(selectedGPA.value) : 0;
+        
+        // Call API to filter resumes
+        fetch('/api/filter_resumes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                skills: selectedSkills, 
+                year: selectedYear,
+                degreeGpa: gpaValue
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            const resultsContainer = document.getElementById('filtered-resumes');
+            resultsContainer.innerHTML = '';
+            
+            if (data.length === 0) {
+                resultsContainer.innerHTML = '<p>No matching resumes found.</p>';
+                return;
+            }
+            
+            data.forEach(resume => {
+                const resumeItem = document.createElement('div');
+                resumeItem.className = 'resume-item';
+                
+                const title = document.createElement('h3');
+                title.textContent = resume.name;
+                
+                const skillsContainer = document.createElement('div');
+                skillsContainer.className = 'skills-container';
+                
+                resume.skills.forEach(skill => {
+                    const skillTag = document.createElement('span');
+                    skillTag.className = 'skill-tag';
+                    skillTag.textContent = skill;
+                    skillsContainer.appendChild(skillTag);
+                });
+                
+                // Add degree info if available
+                if (resume.degree_info && (resume.degree_info.year || resume.degree_info.gpa)) {
+                    const degreeInfo = document.createElement('div');
+                    degreeInfo.className = 'degree-info';
+                    
+                    let infoText = 'Degree: ';
+                    if (resume.degree_info.year) {
+                        infoText += `Graduation Year: ${resume.degree_info.year}`;
+                    }
+                    if (resume.degree_info.gpa) {
+                        if (resume.degree_info.year) infoText += ' | ';
+                        infoText += `GPA: ${resume.degree_info.gpa}`;
+                    }
+                    
+                    degreeInfo.textContent = infoText;
+                    resumeItem.appendChild(degreeInfo);
+                }
+                
+                const viewLink = document.createElement('a');
+                viewLink.href = `/results?filename=${resume.id}`;
+                viewLink.className = 'btn-outline';
+                viewLink.textContent = 'View Details';
+                
+                resumeItem.appendChild(title);
+                resumeItem.appendChild(skillsContainer);
+                resumeItem.appendChild(viewLink);
+                
+                resultsContainer.appendChild(resumeItem);
+            });
+        })
+        .catch(error => {
+            console.error('Error filtering resumes:', error);
+            alert('An error occurred while filtering resumes. Please try again later.');
+        });
+    });
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .year-filter-options {
+        margin-bottom: 20px;
+    }
+    
+    .year-filter-type {
+        margin-bottom: 15px;
+        padding: 12px;
+        border-radius: 6px;
+        background-color: #f5f7fa;
+    }
+    
+    .specific-year-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .quick-year-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 8px;
+    }
+    
+    .quick-year-btn {
+        background-color: #e0e0e0;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-size: 0.8em;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .quick-year-btn:hover {
+        background-color: #d0d0d0;
+    }
+    
+    .year-select {
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        width: 100%;
+        max-width: 250px;
+        background-color: white;
+    }
+    
+    .degree-info {
+        margin: 8px 0;
+        font-size: 0.9em;
+        color: #555;
+        background-color: #f0f8ff;
+        padding: 5px 10px;
+        border-radius: 4px;
+    }
+    
+    .skills-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+        max-height: 200px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .skill-checkbox {
+        display: flex;
+        align-items: center;
+        padding: 4px 8px;
+        background-color: #f0f0f0;
+        border-radius: 4px;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .skill-checkbox:hover {
+        background-color: #e0e0e0;
+    }
+    
+    .skill-checkbox input {
+        margin-right: 5px;
+    }
+    
+    .gpa-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .gpa-selector label {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        background-color: #f0f0f0;
+        border-radius: 4px;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .gpa-selector label:hover {
+        background-color: #e0e0e0;
+    }
+    
+    .gpa-selector input {
+        margin-right: 5px;
+    }
+    
+    .btn-gradient {
+        background: linear-gradient(135deg, #4b6cb7, #182848);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #3b5aa7, #0e1a38);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .results-section {
+        margin-top: 30px;
+    }
+    
+    .resume-item {
+        background-color: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .resume-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .resume-item h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #333;
+    }
+    
+    .skills-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 10px;
+    }
+    
+    .skill-tag {
+        background-color: #e8f0fe;
+        color: #1a73e8;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+    }
+    
+    .btn-outline {
+        display: inline-block;
+        padding: 6px 12px;
+        border: 1px solid #4b6cb7;
+        border-radius: 4px;
+        color: #4b6cb7;
+        text-decoration: none;
+        font-size: 0.9em;
+        transition: all 0.2s;
+    }
+    
+    .btn-outline:hover {
+        background-color: #4b6cb7;
+        color: white;
+    }
+</style>
+{% endblock %}

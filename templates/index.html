@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <h1>Upload Your Resume</h1>
+    <p>Our LLM-powered resume parser will extract skills, education, and experience from your resume.</p>
+    
+    <form action="/upload" method="post" enctype="multipart/form-data" class="upload-form">
+        <div class="file-input-container">
+            <label for="file-upload" class="custom-file-upload">
+                <i class="fa fa-cloud-upload"></i> Choose File
+            </label>
+            <input id="file-upload" type="file" name="file" accept=".pdf,.docx" required>
+            <span id="file-name">No file chosen</span>
+        </div>
+        
+        <button type="submit" class="btn-gradient">Parse Resume</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('file-upload').addEventListener('change', function() {
+        const fileName = this.files[0].name;
+        document.getElementById('file-name').textContent = fileName;
+    });
+</script>
+{% endblock %}

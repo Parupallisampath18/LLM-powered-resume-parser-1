@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <title>Resume Parser</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Resume Parser</div>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/filter">Filter Resumes</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <footer>
+        
+    </footer>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
