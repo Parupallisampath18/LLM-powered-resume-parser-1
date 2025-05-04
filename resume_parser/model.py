@@ -22,11 +22,7 @@ class ResumeParserModel:
             subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
             self.nlp = spacy.load("en_core_web_sm")
 
-        # Anthropic API configuration
-        self.api_key = "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"
-        self.client = anthropic.Anthropic(api_key=self.api_key)
-        self.model = "claude-3-7-sonnet-20250219"  # Using Claude model
-        
+    
         # Define education level keywords for classification
         self.degree_keywords = [
             "bachelor", "b.tech", "btech", "b. tech", "undergraduate", "ug", "be", "b.e.",
